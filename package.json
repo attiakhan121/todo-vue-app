@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.13",
+    "idb": "^8.0.3",
+    "pinia": "^3.0.3",
     "tailwindcss": "^4.1.13",
     "vue": "^3.5.18"
   },
