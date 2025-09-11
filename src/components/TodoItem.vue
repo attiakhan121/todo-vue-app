@@ -9,6 +9,16 @@ const props = defineProps({
 })
 
 const store = useTodoStore()
+
+// toggle task
+const toggle = () => {
+  store.toggleTask(props.task.id)
+}
+
+// delete task
+const remove = () => {
+  store.deleteTask(props.task.id)
+}
 </script>
 
 <template>
@@ -17,8 +27,8 @@ const store = useTodoStore()
     <div class="flex items-center gap-2">
       <input
         type="checkbox"
-        v-model="props.task.done"
-        @change="store.toggleTask(props.task.id)"
+        :checked="props.task.done"
+        @change="toggle"
         class="cursor-pointer"
       />
       <span :class="props.task.done ? 'line-through text-gray-400' : ''">
@@ -28,7 +38,7 @@ const store = useTodoStore()
 
     <!-- delete button -->
     <button
-      @click="store.deleteTask(props.task.id)"
+      @click="remove"
       class="text-red-500 hover:text-red-700"
     >
       ✕

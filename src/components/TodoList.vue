@@ -13,10 +13,10 @@ onMounted(() => {
 })
 
 // add task
-const addTask = () => {
+const addTask = async () => {
   const text = newTask.value.trim()
   if (!text) return
-  store.addTask(text)
+  await store.addTask(text)
   newTask.value = ''
 }
 
@@ -38,6 +38,16 @@ const saveToFile = () => {
   URL.revokeObjectURL(url)
 }
 
+// sync with backend
+const syncWithBackend = async () => {
+  await store.syncTodos()
+}
+
+// reload from backend (re-run init)
+const loadFromBackend = async () => {
+  await store.init()
+}
+ 
 const btnClass = (name) => {
   return [
     'px-2 py-1 rounded',
@@ -89,9 +99,11 @@ const btnClass = (name) => {
     </ul>
 
     <!-- footer actions -->
-    <div class="flex justify-between items-center mt-4 text-sm">
+    <div class="flex flex-wrap justify-between items-center mt-4 text-sm gap-3">
       <button @click="store.clearCompleted" class="text-red-500">Clear completed</button>
       <button @click="saveToFile" class="text-blue-600">Export JSON</button>
+      <button @click="syncWithBackend" class="bg-blue-600 text-white px-3 py-1 rounded">🔄 Sync</button>
+      <button @click="loadFromBackend" class="bg-green-600 text-white px-3 py-1 rounded">⬇️ Load</button>
     </div>
   </div>
 </template>
