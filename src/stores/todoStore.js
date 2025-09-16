@@ -2,9 +2,10 @@ import { defineStore } from 'pinia'
 import { saveTodos, loadTodos, clearTodos } from '../utils/db'
 import axios from 'axios'
 
-const API_BASE = 'http://127.0.0.1:8000/api/resource/ToDo'
-const API_KEY = '7633be98b75b153'
-const API_SECRET = 'fbdbf76bb938322'
+// ✅ Space handle with %20
+const API_BASE = 'http://127.0.0.1:8000/api/resource/Todo%20item'
+const API_KEY = '169432fa1d8ab23'
+const API_SECRET = '670fd3f346c0483'
 
 const apiHeaders = {
   'Authorization': `token ${API_KEY}:${API_SECRET}`
@@ -12,7 +13,7 @@ const apiHeaders = {
 
 export const useTodoStore = defineStore('todo', {
   state: () => ({
-    todos: []   // local + backend synced todos
+    todos: []
   }),
 
   getters: {
@@ -22,32 +23,27 @@ export const useTodoStore = defineStore('todo', {
   },
 
   actions: {
-    // 🟢 Init todos: load from IndexedDB + try fetching from backend
+    // 🟢 Init todos: sirf backend se fresh load (Doctype change hone k baad yeh best hai)
     async init() {
-      // 1. Load from IndexedDB
-      this.todos = await loadTodos()
-
       try {
-        // 2. Load from Frappe
+        // 1. Clear local cache
+        await clearTodos()
+        this.todos = []
+
+        // 2. Load from backend
         const res = await axios.get(API_BASE, { headers: apiHeaders })
-        const serverTodos = res.data.data.map(item => ({
-          id: Date.now() + Math.random(), // local unique id
+        this.todos = res.data.data.map(item => ({
+          id: Date.now() + Math.random(),
           frappe_id: item.name,
           text: item.description,
           done: item.status === 'Closed',
           createdAt: item.creation
         }))
 
-        // 3. Merge without duplicates
-        for (const st of serverTodos) {
-          if (!this.todos.find(t => t.frappe_id === st.frappe_id)) {
-            this.todos.push(st)
-          }
-        }
-
+        // 3. Save fresh data to local cache
         await this.persist()
       } catch (err) {
-        console.warn("⚠️ Backend fetch failed, offline mode only:", err)
+        console.warn("⚠️ Backend fetch failed:", err)
       }
     },
 
@@ -56,14 +52,14 @@ export const useTodoStore = defineStore('todo', {
       await saveTodos(this.todos)
     },
 
-    // 🟢 Add task locally (sync later)
+    // 🟢 Add task
     async addTask(text) {
       const task = {
         id: Date.now(),
         text,
         done: false,
         createdAt: new Date().toISOString(),
-        frappe_id: null // backend me abhi sync nahi hua
+        frappe_id: null
       }
       this.todos.unshift(task)
       await this.persist()
@@ -77,7 +73,6 @@ export const useTodoStore = defineStore('todo', {
       t.done = !t.done
       await this.persist()
 
-      // Agar backend me sync hua tha → update karo
       if (t.frappe_id) {
         try {
           await axios.put(`${API_BASE}/${t.frappe_id}`, {
@@ -108,7 +103,6 @@ export const useTodoStore = defineStore('todo', {
     // 🟢 Clear completed tasks
     async clearCompleted() {
       const completed = this.todos.filter(x => x.done)
-
       this.todos = this.todos.filter(x => !x.done)
       await this.persist()
 

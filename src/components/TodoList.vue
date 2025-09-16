@@ -8,8 +8,8 @@ const newTask = ref('')
 const filter = ref('all')
 
 // init store on mount
-onMounted(() => {
-  store.init()
+onMounted(async () => {
+  await store.init()
 })
 
 // add task
@@ -40,12 +40,23 @@ const saveToFile = () => {
 
 // sync with backend
 const syncWithBackend = async () => {
-  await store.syncTodos()
+  try {
+    await store.syncTodos()
+  } catch (err) {
+    console.error("❌ Sync failed:", err)
+    alert("Sync failed. Check console for details.")
+  }
 }
 
 // reload from backend (re-run init)
 const loadFromBackend = async () => {
-  await store.init()
+  try {
+    await store.init()
+    alert("✅ Reloaded tasks from backend!")
+  } catch (err) {
+    console.error("❌ Reload failed:", err)
+    alert("Failed to reload from backend.")
+  }
 }
  
 const btnClass = (name) => {
